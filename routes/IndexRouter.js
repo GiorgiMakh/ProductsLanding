@@ -38,6 +38,10 @@ router.route('/products')
     })
     .post(upload.single('image'), (req, res) =>{
         const { price, description } = req.body;
+        
+        // Validate credentials
+        if(!price || !description) return res.status(401).json({message: 'Invalid credentials'})
+        
         const url = req.protocol + '://' + req.get('host');
         const imageAddress =`${url}/public/${req.file.filename}`;
         const newProduct = new Product({ imageAddress, price, description})
@@ -64,13 +68,17 @@ router.route('/products')
                 });
             });
         }).catch(err => {
-            console.err(err)
+            console.error(err)
         });          
     })
 
 router.route('/product/:id')
     .get((req, res)=>{
         const id = req.params.id;
+        
+        // Validate credentials
+        if(!id) return res.status(401).json({message: 'Invalid credentials'})
+        
         Product.findById(id).then((data) => {
             res.status(200).json(data)
         })
@@ -78,8 +86,13 @@ router.route('/product/:id')
     .put(upload.single('image'), (req, res)=> {
         const id = req.params.id;
         const { oldimage, price, description } = req.body;
+
+        // Validate credentials
+        if(!id || !oldimage || !price || description) return res.status(401).json({message: 'Invalid credentials'})
+
         const url = req.protocol + '://' + req.get('host');
         const imageAddress =`${url}/public/${req.file.filename}`;
+        
         Product.findByIdAndUpdate(id, {imageAddress: imageAddress, price: price, description: description}).then(()=>{
             const filePath = path.join(__dirname, '../public', path.basename(oldimage));
             fs.unlink(filePath, err => {
@@ -93,6 +106,10 @@ router.route('/product/:id')
     })
     .delete((req, res)=>{
         const id = req.params.id;
+
+        // Validate credentials
+        if(!id) return res.status(401).json({message: 'Invalid credentials'})
+        
         Product.findByIdAndRemove({_id: id}).then((res)=>{
             const filePath = path.join(__dirname, '../public', path.basename(res.imageAddress));
             fs.unlink(filePath, err => {
